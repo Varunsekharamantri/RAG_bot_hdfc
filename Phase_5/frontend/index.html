@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groww Dashboard Mockup</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Include Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Include FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Static Dashboard Layout -->
+    <div class="dashboard-wrapper">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="nav-left">
+                <div class="logo">Groww</div>
+                <div class="nav-links">
+                    <a href="#" class="active">Dashboard</a>
+                    <a href="#">Portfolio</a>
+                    <a href="#">Assistant</a>
+                    <a href="#">Markets</a>
+                </div>
+            </div>
+            <div class="nav-right">
+                <i class="fa-regular fa-bell"></i>
+                <i class="fa-regular fa-circle-user"></i>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Left Column -->
+            <div class="col-left">
+                <!-- Portfolio Overview -->
+                <div class="card portfolio-card">
+                    <div class="card-header-flex">
+                        <div>
+                            <h2>Portfolio Overview</h2>
+                            <p class="subtitle">Your investments are performing 4.2% above benchmark</p>
+                        </div>
+                        <div class="total-value">
+                            <span class="label">TOTAL VALUE</span>
+                            <span class="value">₹42,85,210.00</span>
+                        </div>
+                    </div>
+                    <!-- Mock Chart -->
+                    <div class="mock-chart">
+                        <div class="bar bar-1"></div>
+                        <div class="bar bar-2"></div>
+                        <div class="bar bar-3"></div>
+                        <div class="bar bar-4"></div>
+                        <div class="bar bar-5"></div>
+                        <div class="bar bar-6"></div>
+                        <div class="bar bar-7"></div>
+                    </div>
+                </div>
+
+                <!-- Bottom Row -->
+                <div class="bottom-row">
+                    <div class="card asset-card">
+                        <h2>Asset Allocation</h2>
+                        <div class="donut-chart-container">
+                            <div class="donut"></div>
+                            <div class="legend">
+                                <div><span class="dot equity"></span> Equity (65%)</div>
+                                <div><span class="dot debt"></span> Debt (20%)</div>
+                                <div><span class="dot gold"></span> Gold (15%)</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card funds-card">
+                        <h2>Top Performing Funds</h2>
+                        <ul class="fund-list">
+                            <li>
+                                <span>HDFC Mid-Cap Opportunities</span>
+                                <span class="return green">+18.4%</span>
+                            </li>
+                            <li>
+                                <span>HDFC Top 100 Fund</span>
+                                <span class="return green">+12.1%</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-right">
+                <div class="card insight-card">
+                    <div class="insight-header">
+                        <i class="fa-regular fa-lightbulb"></i>
+                        <h2>Smart Insight</h2>
+                    </div>
+                    <p>You have unallocated funds in your savings account. Investing ₹50,000 more in the Mid-Cap fund could potentially increase your annual yield by 0.8%.</p>
+                    <button class="btn-primary">Optimize Now</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Floating Assistant Widget -->
+    <div id="assistant-widget" class="assistant-widget hidden">
+        <div class="assistant-header">
+            <div class="header-left">
+                <div class="robot-icon">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="header-text">
+                    <h3>HDFC Fund Assistant</h3>
+                    <span>Facts-only. No advice.</span>
+                </div>
+            </div>
+            <button id="close-assistant" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div id="chat-messages" class="chat-messages">
+            <!-- Welcome Message -->
+            <div class="message assistant">
+                Hello! I can help with factual info about HDFC Mutual Funds. Try asking about exit loads or SIPs.
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="chip">Exit Load?</button>
+            <button class="chip">Min SIP?</button>
+            <button class="chip">Capital Gains?</button>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area">
+            <input type="text" id="chat-input" placeholder="Type your message...">
+            <button id="send-btn" class="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+        <div class="footer-note">Data synced daily at 9:15 AM IST.</div>
+    </div>
+
+    <!-- Floating Action Button (FAB) -->
+    <button id="fab" class="fab">
+        <i class="fa-solid fa-message"></i>
+    </button>
+
+    <script src="script.js"></script>
+</body>
+</html>

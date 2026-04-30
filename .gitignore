@@ -1,0 +1,17 @@
+# Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# We intentionally do NOT ignore Phase_1/chroma_db/documents.json 
+# because it needs to be committed to GitHub so Vercel can read it.
+# !Phase_1/chroma_db/documents.json

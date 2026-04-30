@@ -1,0 +1,20 @@
+# Phase 1: Data Ingestion
+requests
+beautifulsoup4
+langchain
+langchain-text-splitters
+langchain-community
+langchain-chroma
+sentence-transformers
+chromadb
+langchain-core
+
+# Phase 2: Guardrails & Safety
+groq
+python-dotenv
+
+# Utilities
+langchain
+streamlit
+fastapi
+uvicorn

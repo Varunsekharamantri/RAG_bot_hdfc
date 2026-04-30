@@ -1,0 +1,8 @@
+requests
+beautifulsoup4
+langchain
+langchain-text-splitters
+langchain-community
+langchain-chroma
+sentence-transformers
+chromadb

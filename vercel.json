@@ -1,0 +1,22 @@
+{
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "Phase_5/frontend/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/chat",
+      "dest": "api/index.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "Phase_5/frontend/$1"
+    }
+  ]
+}
