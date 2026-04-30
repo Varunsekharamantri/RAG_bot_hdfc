@@ -31,7 +31,7 @@ class SimpleChromaDB:
         scored_docs = []
         for doc_id, doc_data in self.documents.items():
             content = doc_data["content"].lower()
-            score = sum(1 for word in query_lower.split() if word in content and len(word) > 3)
+            score = sum(1 for word in query_lower.split() if word in content and len(word) >= 3)
             scored_docs.append((score, doc_data))
             
         # Sort by score descending
