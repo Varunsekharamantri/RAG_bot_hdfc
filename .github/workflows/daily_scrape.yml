@@ -8,6 +8,8 @@ on:
 jobs:
   scrape-and-commit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
       - name: Checkout Repository
@@ -34,4 +36,4 @@ jobs:
           git config --local user.name "GitHub Action Bot"
           git add Phase_1/chroma_db/documents.json
           git commit -m "chore: automated daily scraping of fund data" || echo "No changes to commit"
-          git push origin main || git push origin master
+          git push origin HEAD:main || git push origin HEAD:master
