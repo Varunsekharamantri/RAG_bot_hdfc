@@ -52,7 +52,7 @@ else:
     logger.warning("No .env file found. Trying to use environment variables directly...")
 
 # Initialize Groq client (created lazily so a missing key never crashes the app at import)
-from runtime.groq_config import get_client
+from runtime.groq_config import get_client, create_chat
 
 client = get_client()
 if client is None:
@@ -149,8 +149,8 @@ Respond with ONLY "FACT" or "ADVICE", nothing else."""
         try:
             logger.info(f"Classifying query intent via Groq (llama-3.1-8b-instant)...")
             
-            message = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+            message = create_chat(
+                client,
                 messages=[
                     {"role": "system", "content": IntentClassifier.CLASSIFICATION_SYSTEM_PROMPT},
                     {"role": "user", "content": query}

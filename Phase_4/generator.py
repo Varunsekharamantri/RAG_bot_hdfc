@@ -6,7 +6,7 @@ from typing import List
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-from runtime.groq_config import get_client
+from runtime.groq_config import get_client, create_chat
 
 client = get_client()
 if client is None:
@@ -57,8 +57,8 @@ class Generator:
         try:
             prompt_content = f"Context:\n{context}\n\nUser Question: {query}"
             
-            response = client.chat.completions.create(
-                model=self.model_name,
+            response = create_chat(
+                client,
                 messages=[
                     {"role": "system", "content": self.SYSTEM_PROMPT},
                     {"role": "user", "content": prompt_content}
