@@ -1,31 +1,16 @@
 import os
 import logging
 from typing import List
-from dotenv import load_dotenv
-from groq import Groq
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Load environment variables
-import pathlib
-env_paths = [
-    pathlib.Path(".env"),
-    pathlib.Path(__file__).parent.parent / ".env",
-]
+from runtime.groq_config import get_client, create_chat
 
-for path in env_paths:
-    if path.exists():
-        load_dotenv(dotenv_path=path)
-        logger.info(f"Loaded .env from: {path.resolve()}")
-        break
-
-GROQ_API_KEY = os.getenv("API_KEY")
-if not GROQ_API_KEY:
-    logger.warning("API_KEY not found in environment. Please ensure .env file exists.")
-
-client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+client = get_client()
+if client is None:
+    logger.error("No Groq key found (GROQ_API_KEY / API_KEY).")
 
 class Generator:
     """Handles the Generation phase (Phase 4) using the Groq API."""
@@ -72,8 +57,8 @@ class Generator:
         try:
             prompt_content = f"Context:\n{context}\n\nUser Question: {query}"
             
-            response = client.chat.completions.create(
-                model=self.model_name,
+            response = create_chat(
+                client,
                 messages=[
                     {"role": "system", "content": self.SYSTEM_PROMPT},
                     {"role": "user", "content": prompt_content}
