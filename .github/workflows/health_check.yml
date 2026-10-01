@@ -15,7 +15,7 @@ jobs:
         run: |
           code=$(curl -s -o body.json -w '%{http_code}' --max-time 60 https://rag-bot-hdfc.vercel.app/health)
           cat body.json; echo
-          if [ "$code" != "200" ]; then
-            echo "::error::Health check failed (HTTP $code). Rotate the Groq key in Vercel env vars and redeploy."
+          if [ "$code" != "200" ] || ! grep -q '"status":"ok"' body.json; then
+            echo "::error::Health check not OK (HTTP $code). See the response above: bad Groq key, or the preferred model was retired."
             exit 1
           fi

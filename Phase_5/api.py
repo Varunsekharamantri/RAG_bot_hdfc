@@ -49,8 +49,8 @@ class ChatResponse(BaseModel):
 async def health():
     from fastapi.responses import JSONResponse
     from runtime.groq_config import check_groq
-    ok, detail = check_groq()
-    return JSONResponse({"status": "ok" if ok else "error", "groq": detail}, status_code=200 if ok else 503)
+    status, detail = check_groq()
+    return JSONResponse({"status": status, "groq": detail}, status_code=503 if status == "error" else 200)
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
