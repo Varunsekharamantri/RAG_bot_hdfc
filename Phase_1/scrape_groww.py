@@ -2,6 +2,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 import json
+import sys
 from datetime import datetime
 
 URLS = [
@@ -16,6 +17,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(script_dir, "chroma_db", "documents.json")
 def scrape():
     docs = {}
+    failed = []
     doc_id = 1
     scrape_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
@@ -23,13 +25,14 @@ def scrape():
         print(f"Scraping {url}...")
         headers = {'User-Agent': 'Mozilla/5.0'}
         try:
-            resp = requests.get(url, headers=headers)
+            resp = requests.get(url, headers=headers, timeout=30)
             resp.raise_for_status()
             soup = BeautifulSoup(resp.text, 'html.parser')
             script = soup.find('script', id='__NEXT_DATA__')
             
             if not script:
                 print(f"No Next.js data found for {url}")
+                failed.append(url)
                 continue
                 
             data = json.loads(script.string)
@@ -37,6 +40,7 @@ def scrape():
             
             if not mf_data:
                 print(f"No mfServerSideData found for {url}")
+                failed.append(url)
                 continue
                 
             name = mf_data.get('scheme_name', 'Unknown Scheme')
@@ -73,12 +77,27 @@ def scrape():
             
         except Exception as e:
             print(f"Failed to process {url}: {e}")
-            
+            failed.append(url)
+
+    # Never wipe good data: keep the previous entry for any page that failed.
+    if failed and os.path.exists(DB_PATH):
+        with open(DB_PATH) as f:
+            old = json.load(f)
+        for old_doc in old.values():
+            if old_doc["metadata"]["source_url"] in failed:
+                docs[str(len(docs) + 1)] = old_doc
+    if not docs:
+        print("ERROR: nothing scraped and no previous data; leaving documents.json untouched.")
+        sys.exit(1)
+
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     with open(DB_PATH, 'w') as f:
         json.dump(docs, f, indent=4)
         
-    print(f"Successfully scraped {len(docs)} funds into {DB_PATH}")
+    print(f"Wrote {len(docs)} funds to {DB_PATH}")
+    if failed:
+        print(f"ERROR: {len(failed)} page(s) failed (old data kept): {failed}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     scrape()

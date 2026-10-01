@@ -1,6 +1,7 @@
 """Single place for the Groq key, model choice, and a health check."""
 
 import os
+import time
 from typing import Optional, Tuple
 
 from groq import (
@@ -29,11 +30,42 @@ def get_client() -> Optional[Groq]:
     return Groq(api_key=key) if key else None
 
 
-def model_candidates():
+# Models that are not chat/text generators; never auto-select these.
+_NOT_CHAT = ("whisper", "tts", "orpheus", "guard", "safeguard", "embed", "playai", "compound")
+_CACHE_SECONDS = 3600
+_available = {"at": 0.0, "ids": None}
+last_used = {"model": None}
+
+
+def available_models(client, force=False):
+    """Model ids Groq currently serves (cached ~1h). None if the list can't be fetched."""
+    now = time.time()
+    if not force and _available["ids"] is not None and now - _available["at"] < _CACHE_SECONDS:
+        return _available["ids"]
+    try:
+        ids = [m.id for m in client.models.list().data]
+    except Exception:
+        return _available["ids"]  # stale list (or None) is better than failing
+    _available.update(at=now, ids=ids)
+    return ids
+
+
+def preferred_models():
     preferred = (os.getenv("GROQ_MODEL") or "").strip()
     models = [preferred] if preferred else []
-    models += [m for m in FALLBACK_MODELS if m not in models]
-    return models
+    return models + [m for m in FALLBACK_MODELS if m not in models]
+
+
+def model_candidates(client=None):
+    """Preferred models that are live, then any other live chat model, best guess first."""
+    wanted = preferred_models()
+    live = available_models(client) if client else None
+    if not live:
+        return wanted  # can't discover: fall back to the static list
+    chosen = [m for m in wanted if m in live]
+    others = sorted(m for m in live if m not in chosen and not any(t in m.lower() for t in _NOT_CHAT))
+    others.sort(key=lambda m: 0 if "gpt-oss" in m else 1 if "llama" in m else 2 if "qwen" in m else 3)
+    return chosen + others
 
 
 def _call(client, model, kwargs):
@@ -48,29 +80,38 @@ def _call(client, model, kwargs):
 
 
 def create_chat(client, **kwargs):
-    """chat.completions.create with automatic fallback when a model is unavailable."""
+    """chat.completions.create that keeps trying live models if one is retired or rejected."""
     last_error = None
-    for model in model_candidates():
+    for model in model_candidates(client)[:6]:
         try:
-            return _call(client, model, kwargs)
+            response = _call(client, model, kwargs)
+            last_used["model"] = model
+            return response
         except (NotFoundError, BadRequestError) as e:
-            last_error = e  # model retired/unknown: try the next one
+            last_error = e
+            _available["at"] = 0.0  # re-discover live models next time
+    if last_error is None:
+        raise RuntimeError("No usable Groq chat model is available.")
     raise last_error
 
 
-def check_groq() -> Tuple[bool, str]:
-    """Make a tiny call. Returns (ok, human-readable status)."""
+def check_groq() -> Tuple[str, str]:
+    """Tiny live call. Returns (status, detail); status is 'ok', 'degraded' or 'error'."""
     client = get_client()
     if client is None:
-        return False, "No Groq key set. Add GROQ_API_KEY (or API_KEY) in Vercel environment variables."
+        return "error", "No Groq key set. Add GROQ_API_KEY (or API_KEY) in Vercel environment variables."
     try:
         create_chat(client, messages=[{"role": "user", "content": "ping"}], max_tokens=64)
-        return True, "Groq key accepted."
     except (AuthenticationError, PermissionDeniedError):
-        return False, "Groq rejected the key (invalid, expired or revoked). Create a new key and update it in Vercel."
+        return "error", "Groq rejected the key (invalid, expired or revoked). Create a new key and update it in Vercel."
     except RateLimitError:
-        return True, "Groq key accepted, but currently rate limited."
+        return "ok", "Groq key accepted, but currently rate limited."
     except APIError as e:
-        return False, f"Groq API error: {e}"
+        return "error", f"Groq API error: {e}"
     except Exception as e:
-        return False, f"Could not reach Groq: {e}"
+        return "error", f"Could not reach Groq: {e}"
+    used = last_used["model"]
+    want = preferred_models()[0]
+    if used != want:
+        return "degraded", f"Working, but preferred model '{want}' is unavailable; using '{used}'. Update GROQ_MODEL / FALLBACK_MODELS."
+    return "ok", f"Groq key accepted; using '{used}'."
