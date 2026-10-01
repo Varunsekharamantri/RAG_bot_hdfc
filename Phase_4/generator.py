@@ -64,11 +64,13 @@ class Generator:
                     {"role": "user", "content": prompt_content}
                 ],
                 temperature=0.1,  # Low temperature for factual consistency
-                max_tokens=150,   # Keep it short (3 sentences limit)
+                max_tokens=800,   # Room for reasoning models; length is limited by the prompt (3 sentences)
                 top_p=0.9
             )
             
-            generated_text = response.choices[0].message.content.strip()
+            generated_text = (response.choices[0].message.content or "").strip()
+            if not generated_text:
+                generated_text = "I cannot find this information in the official documents."
             
             # Format the final response
             final_response = self._format_response(generated_text, sources, last_updated)

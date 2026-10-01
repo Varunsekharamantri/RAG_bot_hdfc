@@ -156,12 +156,16 @@ Respond with ONLY "FACT" or "ADVICE", nothing else."""
                     {"role": "user", "content": query}
                 ],
                 temperature=0,  # Deterministic classification
-                max_tokens=10,  # Very short response
+                max_tokens=256,  # Room for reasoning models; the answer itself is one word
                 top_p=0.1  # Stricter sampling for consistency
             )
             
             # Extract the classification
-            intent = message.choices[0].message.content.strip().upper()
+            intent = (message.choices[0].message.content or "").strip().upper()
+            if "ADVICE" in intent:
+                intent = "ADVICE"
+            elif "FACT" in intent:
+                intent = "FACT"
             
             # Validate response
             if intent not in ["FACT", "ADVICE"]:
