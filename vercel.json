@@ -11,7 +11,7 @@
   ],
   "routes": [
     {
-      "src": "/chat",
+      "src": "/(chat|health)",
       "dest": "api/index.py"
     },
     {

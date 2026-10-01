@@ -9,7 +9,7 @@ import os
 import logging
 from typing import Dict, Tuple
 from dotenv import load_dotenv
-from groq import Groq, RateLimitError, APIError
+from groq import RateLimitError, APIError, AuthenticationError, PermissionDeniedError
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -51,15 +51,12 @@ if env_path:
 else:
     logger.warning("No .env file found. Trying to use environment variables directly...")
 
-# Initialize Groq client
-GROQ_API_KEY = os.getenv("API_KEY")
-if not GROQ_API_KEY:
-    raise ValueError(
-        f"API_KEY not found in environment. Tried paths: {[str(p) for p in env_paths]}\n"
-        "Please ensure .env file exists with API_KEY=your_groq_api_key"
-    )
+# Initialize Groq client (created lazily so a missing key never crashes the app at import)
+from runtime.groq_config import get_client
 
-client = Groq(api_key=GROQ_API_KEY)
+client = get_client()
+if client is None:
+    logger.error("No Groq key found (GROQ_API_KEY / API_KEY). Intent classification will fail.")
 
 # ============================================================================
 # PART 1: LOCAL PII DETECTION (NO API CALLS)
@@ -145,6 +142,10 @@ Respond with ONLY "FACT" or "ADVICE", nothing else."""
             - intent: "FACT", "ADVICE", or "ERROR"
             - response: Educational message if ADVICE, empty if FACT, error msg if ERROR
         """
+        if client is None:
+            logger.error("Groq key missing; cannot classify intent.")
+            return "ERROR", "The assistant is temporarily unavailable (configuration issue). Please try again later."
+
         try:
             logger.info(f"Classifying query intent via Groq (llama-3.1-8b-instant)...")
             
@@ -187,6 +188,10 @@ Respond with ONLY "FACT" or "ADVICE", nothing else."""
             )
             return "ERROR", error_msg
         
+        except (AuthenticationError, PermissionDeniedError) as e:
+            logger.error(f"GROQ KEY REJECTED (invalid/expired/revoked) - replace it in Vercel env vars: {e}")
+            return "ERROR", "The assistant is temporarily unavailable (configuration issue). Please try again later."
+
         except APIError as e:
             logger.error(f"Groq API Error: {e}")
             error_msg = (

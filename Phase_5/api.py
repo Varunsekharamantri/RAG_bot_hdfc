@@ -45,6 +45,13 @@ class ChatResponse(BaseModel):
     type: str # 'factual', 'refusal', 'error'
     text: str
 
+@app.get("/health")
+async def health():
+    from fastapi.responses import JSONResponse
+    from runtime.groq_config import check_groq
+    ok, detail = check_groq()
+    return JSONResponse({"status": "ok" if ok else "error", "groq": detail}, status_code=200 if ok else 503)
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
     query = request.query
@@ -60,6 +67,9 @@ async def chat_endpoint(request: ChatRequest):
     except Exception as e:
         logger.error(f"Guardrail error: {e}")
         return ChatResponse(type="error", text="An error occurred while processing guardrails.")
+
+    if guardrail_result.get('intent') == "ERROR":
+        return ChatResponse(type="error", text=guardrail_result['refusal_message'])
 
     if not guardrail_result['safe_to_process']:
         return ChatResponse(type="refusal", text=guardrail_result['refusal_message'])

@@ -1,0 +1,21 @@
+name: Daily Health Check
+
+# Fails (and GitHub emails the repo owner) if the deployed bot can't reach Groq,
+# e.g. because the Groq key expired or was revoked.
+on:
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check /health on the live deployment
+        run: |
+          code=$(curl -s -o body.json -w '%{http_code}' --max-time 60 https://rag-bot-hdfc.vercel.app/health)
+          cat body.json; echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Health check failed (HTTP $code). Rotate the Groq key in Vercel env vars and redeploy."
+            exit 1
+          fi
